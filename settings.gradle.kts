@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Alpha Metrics Analytics SDK"
 include(":app")
-A
