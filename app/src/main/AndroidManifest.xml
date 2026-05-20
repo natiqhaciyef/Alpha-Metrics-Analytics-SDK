@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AlphaMetricsAnalyticsSDK">
         <activity
-            android:name="com.natighajiyev.alpha_metrics_analytics_sdk.MainActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.AlphaMetricsAnalyticsSDK">
 

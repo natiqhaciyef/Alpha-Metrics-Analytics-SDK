@@ -1,11 +1,10 @@
-package com.natighajiyev.alpha_metrics_analytics_sdk
+package com.natighajiyev.alphametricsanalyticssdk
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.natighajiyev.alphametricsanalyticssdk.R
 import com.natighajiyev.analytics_core.NativeLogger
 
 class MainActivity : AppCompatActivity() {
