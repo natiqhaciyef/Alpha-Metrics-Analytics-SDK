@@ -34,7 +34,6 @@ import javax.inject.Singleton
 
 @Singleton
 class AnalyticsEngine @Inject constructor(
-    private val spatialBridge: SpatialBridge,
     private val storageRepository: RoomBufferRepository
 ) {
     private val engineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -69,9 +68,10 @@ class AnalyticsEngine @Inject constructor(
     private fun startProcessingWorker() {
         engineScope.launch {
             eventChannel.consumeAsFlow().collect { rawEvent ->
-                val metadataString = rawEvent.params.entries.joinToString("&") { "${it.key}=${it.value}" }
+                val metadataString =
+                    rawEvent.params.entries.joinToString("&") { "${it.key}=${it.value}" }
 
-                val compressedPayload = spatialBridge.serializeBatchPayload(
+                val compressedPayload = SpatialBridge.serializeBatchPayload(
                     rawEvent.xCoords,
                     rawEvent.yCoords,
                     rawEvent.timestamps,
@@ -96,6 +96,6 @@ class AnalyticsEngine @Inject constructor(
     fun shutdown() {
         eventChannel.close()
         engineScope.cancel() // Halts background collection workers safely
-        spatialBridge.releaseNativePipeline() // Unregisters consumers inside C++ memory space
+        SpatialBridge.releaseNativePipeline() // Unregisters consumers inside C++ memory space
     }
 }

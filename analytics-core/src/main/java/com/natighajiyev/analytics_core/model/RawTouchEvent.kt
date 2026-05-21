@@ -1,6 +1,6 @@
 package com.natighajiyev.analytics_core.model
 
-data class RawTouchEvent(
+internal data class RawTouchEvent(
     val screenId: String,
     val wallClockTime: Long,
     val timestamps: LongArray,

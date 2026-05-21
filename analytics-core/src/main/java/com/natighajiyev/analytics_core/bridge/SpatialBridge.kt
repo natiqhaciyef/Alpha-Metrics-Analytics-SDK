@@ -1,12 +1,9 @@
 package com.natighajiyev.analytics_core.bridge
 
 import android.util.Log
-import javax.inject.Inject
-import javax.inject.Singleton
 
 
-@Singleton
-class SpatialBridge @Inject constructor() {
+object SpatialBridge{
 
     init {
         try {

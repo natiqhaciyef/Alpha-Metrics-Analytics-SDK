@@ -1,4 +1,4 @@
-package com.natighajiyev.analytics_core.bridge
+package com.natighajiyev.analytics_core.model
 
 import java.util.concurrent.ConcurrentHashMap
 
