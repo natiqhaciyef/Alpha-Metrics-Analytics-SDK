@@ -3,4 +3,7 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.android.library) apply false
+    id("com.google.devtools.ksp") version "2.0.21-1.0.26" apply false
+    // Apply the Hilt plugin at the root level without installing it directly here
+    alias(libs.plugins.dagger.hilt.android) apply false
 }
