@@ -1,6 +1,9 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    // ... your standard plugins
+    id("com.google.devtools.ksp")
+    alias(libs.plugins.dagger.hilt.android)
 }
 
 android {
@@ -51,4 +54,17 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // Hilt Core Android Runtime
+    implementation(libs.dagger.hilt.android)
+
+    // Process Hilt code generation using KSP instead of Kapt
+    ksp(libs.dagger.hilt.compiler)
+
+    val roomVersion = "2.6.1"
+
+    // Core Room Runtime dependencies
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
 }
