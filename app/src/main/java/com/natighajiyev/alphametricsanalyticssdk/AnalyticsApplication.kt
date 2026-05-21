@@ -11,7 +11,6 @@ class AnalyticsApplication : Application() {
     lateinit var analyticsEngine: AnalyticsEngine
 
     override fun onTerminate() {
-        // Cleanly halts the channel queue workers and closes the native memory pipeline references
         analyticsEngine.shutdown()
         super.onTerminate()
     }

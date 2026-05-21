@@ -6,7 +6,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 
-@Singleton // Scopes the repository lifecycle to the entire application
+@Singleton
 class RoomBufferRepository @Inject constructor(
     private val spatialBufferDao: SpatialBufferDao
 ) {

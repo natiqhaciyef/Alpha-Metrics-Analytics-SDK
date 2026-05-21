@@ -14,4 +14,4 @@ struct SpatialPayload {
     double z;
 };
 
-#endif //ALPHA_METRICS_ANALYTICS_SDK_SPATIALPAYLOAD_H
+#endif

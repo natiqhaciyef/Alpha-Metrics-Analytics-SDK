@@ -37,7 +37,6 @@ class AnalyticsEngine @Inject constructor(
     private val spatialBridge: SpatialBridge,
     private val storageRepository: RoomBufferRepository
 ) {
-    // A safe, managed Supervisor Scope tied explicitly to the application lifecycle
     private val engineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val eventChannel = Channel<RawTouchEvent>(capacity = 1000)
 
@@ -53,7 +52,7 @@ class AnalyticsEngine @Inject constructor(
         timestamps: LongArray,
         xCoords: FloatArray,
         yCoords: FloatArray,
-        params: HashMap<String, String> // Added metadata map
+        params: HashMap<String, String>
     ) {
         val event = RawTouchEvent(
             screenId = screenId,
@@ -63,14 +62,13 @@ class AnalyticsEngine @Inject constructor(
             yCoords = yCoords,
             params = params
         )
-        // thread-safe lock-free offer mechanism via channel
+
         eventChannel.trySend(event)
     }
 
     private fun startProcessingWorker() {
         engineScope.launch {
             eventChannel.consumeAsFlow().collect { rawEvent ->
-                // 1. Offload complex geometry serialization handling to the native layer
                 val metadataString = rawEvent.params.entries.joinToString("&") { "${it.key}=${it.value}" }
 
                 val compressedPayload = spatialBridge.serializeBatchPayload(
@@ -80,7 +78,6 @@ class AnalyticsEngine @Inject constructor(
                     metadataString
                 )
 
-                // 2. Persist the compressed blob straight down to localized Room structures
                 if (compressedPayload.isNotEmpty()) {
                     storageRepository.insertPayload(
                         screenId = rawEvent.screenId,

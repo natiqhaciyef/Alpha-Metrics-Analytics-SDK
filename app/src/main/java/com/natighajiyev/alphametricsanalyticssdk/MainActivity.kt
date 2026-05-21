@@ -14,7 +14,6 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var analyticsEngine: AnalyticsEngine
-    // Temporary memory storage vectors to gather coordinates during an active gesture swipe
     private val xCoords = mutableListOf<Float>()
     private val yCoords = mutableListOf<Float>()
     private val timestamps = mutableListOf<Long>()
@@ -36,16 +35,13 @@ class MainActivity : AppCompatActivity() {
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                // Clear any leftover artifacts and begin gathering a new gesture trace
                 clearTelemetryBuffers()
                 recordTrackingPoint(event)
             }
             MotionEvent.ACTION_MOVE -> {
-                // Continuously log points as the user moves their finger across the screen
                 recordTrackingPoint(event)
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                // Final point collected, process the batched historical arrays
                 recordTrackingPoint(event)
 
                 if (xCoords.isNotEmpty()) {
@@ -64,15 +60,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // CRITICAL: Call super so the system delivers the touch to underlying views
-        // If you return true without calling super, your buttons become completely unclickable!
         return super.dispatchTouchEvent(event)
     }
 
     private fun recordTrackingPoint(event: MotionEvent) {
         xCoords.add(event.x)
         yCoords.add(event.y)
-        // eventTime tracks exact hardware clock event generation interval metrics
         timestamps.add(event.eventTime)
     }
 

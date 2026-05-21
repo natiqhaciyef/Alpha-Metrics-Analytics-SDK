@@ -33,4 +33,4 @@ public:
     void flushToCore();
 };
 
-#endif //ALPHA_METRICS_ANALYTICS_SDK_SPATIALRINGBUFFER_H
+#endif

@@ -11,7 +11,6 @@ data class SpatialBufferEntity(
     val payload: ByteArray,
     val params: String
 ) {
-    // Standard overrides for safe array handling in data classes
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

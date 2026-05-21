@@ -46,7 +46,7 @@ Java_com_natighajiyev_analytics_1core_bridge_SpatialBridge_normalizeAndSerialize
         jlongArray timestamps,
         jstring metadata_string // Added metadata parameter
 ) {
-    // 1. Validate pointers for coordinate primitives and metadata string references
+    // Validate pointers for coordinate primitives and metadata string references
     if (!x_coords || !y_coords || !timestamps || !metadata_string) {
         jclass exClass = env->FindClass("java/lang/IllegalArgumentException");
         if (exClass) env->ThrowNew(exClass, "Native analytics layer received null arrays or metadata string");
@@ -60,7 +60,7 @@ Java_com_natighajiyev_analytics_1core_bridge_SpatialBridge_normalizeAndSerialize
         return nullptr;
     }
 
-    // 2. Extract and format the incoming metadata string
+    // Extract and format the incoming metadata string
     const char* nativeMetadataChars = env->GetStringUTFChars(metadata_string, nullptr);
     if (!nativeMetadataChars) {
         return nullptr; // OutOfMemoryError thrown automatically by the JVM
@@ -75,12 +75,12 @@ Java_com_natighajiyev_analytics_1core_bridge_SpatialBridge_normalizeAndSerialize
         return env->NewByteArray(0);
     }
 
-    // 3. Pin primitive data arrays to bypass JVM Garbage Collection sweeps
+    // Pin primitive data arrays to bypass JVM Garbage Collection sweeps
     jfloat* rawX = env->GetFloatArrayElements(x_coords, nullptr);
     jfloat* rawY = env->GetFloatArrayElements(y_coords, nullptr);
     jlong*  rawTimestamps = env->GetLongArrayElements(timestamps, nullptr);
 
-    // 4. Memory footprint calculation & allocation sizing optimization
+    // Memory footprint calculation & allocation sizing optimization
     const size_t coordinateRecordSize = sizeof(int64_t) + (sizeof(double) * 2);
     const size_t totalExpectedSize = sizeof(uint32_t) + metadataByteLength + (elementCount * coordinateRecordSize);
 
@@ -91,13 +91,13 @@ Java_com_natighajiyev_analytics_1core_bridge_SpatialBridge_normalizeAndSerialize
         serializedBuffer.insert(serializedBuffer.end(), ptr, ptr + size);
     };
 
-    // 5. STEP 1: Write metadata header segment
+    // STEP 1: Write metadata header segment
     appendBytes(reinterpret_cast<const uint8_t*>(&metadataByteLength), sizeof(uint32_t));
     if (metadataByteLength > 0) {
         appendBytes(reinterpret_cast<const uint8_t*>(metadataStr.data()), metadataByteLength);
     }
 
-    // 6. STEP 2: Write normalized spatial telemetry data matrix
+    // STEP 2: Write normalized spatial telemetry data matrix
     for (jsize i = 0; i < elementCount; i++) {
         int64_t ts = static_cast<int64_t>(rawTimestamps[i]);
         double serializedNormX = static_cast<double>(rawX[i]) * 0.01;
@@ -108,12 +108,12 @@ Java_com_natighajiyev_analytics_1core_bridge_SpatialBridge_normalizeAndSerialize
         appendBytes(reinterpret_cast<const uint8_t*>(&serializedNormY), sizeof(double));
     }
 
-    // 7. Unpin arrays to release locks back to JVM heap spaces safely
+    // Unpin arrays to release locks back to JVM heap spaces safely
     env->ReleaseFloatArrayElements(x_coords, rawX, JNI_ABORT);
     env->ReleaseFloatArrayElements(y_coords, rawY, JNI_ABORT);
     env->ReleaseLongArrayElements(timestamps, rawTimestamps, JNI_ABORT);
 
-    // 8. Construct structural java primitive byte array container to ship to Room
+    // Construct structural java primitive byte array container to ship to Room
     jbyteArray resultByteArray = env->NewByteArray(static_cast<jsize>(serializedBuffer.size()));
     if (!resultByteArray) return nullptr;
 

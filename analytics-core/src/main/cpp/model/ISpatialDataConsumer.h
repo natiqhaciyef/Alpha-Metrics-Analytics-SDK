@@ -13,4 +13,4 @@ public:
     virtual void onSpatialDataProcessed(const SpatialPayload& payload, double distanceMagnitude) = 0;
 };
 
-#endif //ALPHA_METRICS_ANALYTICS_SDK_ISPATIALDATACONSUMER_H
+#endif

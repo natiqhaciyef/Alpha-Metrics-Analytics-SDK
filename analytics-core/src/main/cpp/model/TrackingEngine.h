@@ -12,4 +12,4 @@ public:
     void onSpatialDataProcessed(const SpatialPayload& payload, double distanceMagnitude) override;
 };
 
-#endif //ALPHA_METRICS_ANALYTICS_SDK_TRACKINGENGINE_H
+#endif

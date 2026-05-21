@@ -32,6 +32,6 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideSpatialBufferDao(database: SpatialDatabase): SpatialBufferDao {
-        return database.spatialBufferDao() // Must return com.natighajiyev.analytics_core.db.SpatialBufferDao
+        return database.spatialBufferDao()
     }
 }
