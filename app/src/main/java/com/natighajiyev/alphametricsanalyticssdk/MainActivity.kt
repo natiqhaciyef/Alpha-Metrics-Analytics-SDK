@@ -74,4 +74,9 @@ class MainActivity : AppCompatActivity() {
         yCoords.clear()
         timestamps.clear()
     }
+
+    override fun onDestroy() {
+        analyticsEngine.shutdown()
+        super.onDestroy()
+    }
 }

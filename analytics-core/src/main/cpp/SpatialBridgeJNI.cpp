@@ -127,6 +127,7 @@ Java_com_natighajiyev_analytics_1core_bridge_SpatialBridge_normalizeAndSerialize
 
 JNIEXPORT void JNICALL
 Java_com_natighajiyev_analytics_1core_bridge_SpatialBridge_shutdownEnginePipeline(JNIEnv *env, jobject thiz) {
+    LOGI("Engine Pipeline shut down pending...");
     g_SpatialBuffer.unregisterConsumer();
     LOGI("Engine Pipeline shut down cleanly.");
 }
