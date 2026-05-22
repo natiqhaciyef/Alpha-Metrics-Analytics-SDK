@@ -1,0 +1,19 @@
+[Service onStartCommand()] ──► Launches Coroutine Scope (Dispatchers.IO)
+                                        │
+                                        ▼
+    ┌───────────────────► [ Loop Run Pass (Every 10 seconds) ]
+    │                                   │
+    │                      Checks nativeGetPendingCount()
+    │                                   │
+    │         ┌─────────────────────────┴─────────────────────────┐
+    │         ▼ (If Count > 0)                                    ▼ (If Count == 0)
+    │   nativePollEvent()                                    Enters delay(10000) block
+    │         │                                                   │
+    │         ▼                                                   │
+    │   Dispatched to server via HttpAnalyticsDispatcher          │
+    │         │                                                   │
+    │   ┌─────┴────────────────────────┐                          │
+    │   ▼ (On Success HTTP 2xx)        ▼ (On Network Failure)     │
+    │ nativePopEvent()              delay(5000) & retry later     │
+    │   │                              │                          │
+    └───┴──────────────────────────────┴──────────────────────────┴◄───┘

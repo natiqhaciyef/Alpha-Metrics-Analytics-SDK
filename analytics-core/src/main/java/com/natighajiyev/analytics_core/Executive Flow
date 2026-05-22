@@ -1,0 +1,27 @@
+        [Host App Application.onCreate()]
+                       │
+                       ▼
+  ┌──────────────────────────────────────────────┐
+  │ 1. Resolve Process Scope Context             │  ◄── Identify if this is the user's UI process
+  └────────────────────┬─────────────────────────┘      or your isolated background upload process.
+                       │
+         ┌─────────────┴─────────────┐
+         ▼ (If UI Process)           ▼ (If :alphametrics_egress_v1 Process)
+  ┌──────────────────────────────┐ ┌──────────────────────────────┐
+  │ 2a. System.loadLibrary()     │ │ 2b. System.loadLibrary()     │
+  └────────────┬─────────────────┘ └────────────┬─────────────────┘
+               │                                │
+               ▼                                ▼
+  ┌──────────────────────────────┐ ┌──────────────────────────────┐
+  │ 3a. Initialize C++ mmap Core │ │ 3b. Initialize C++ mmap Core │
+  │    (Map alpha_metrics.bin)   │ │    (Map alpha_metrics.bin)   │
+  └────────────┬─────────────────┘ └────────────┬─────────────────┘
+               │                                │
+               ▼                                ▼
+  ┌──────────────────────────────┐ ┌──────────────────────────────┐
+  │ 4a. Start Background Service │ │ 4b. Instantiate Dispatcher   │
+  │    (Kicks off upload process)│ │    (Preps HTTP Engine)       │
+  └────────────┬─────────────────┘ └────────────┬─────────────────┘
+               │                                │
+               ▼                                ▼
+ [SDK Ready for Rapid UI Taps]        [Pipeline Polling Data to Server]
