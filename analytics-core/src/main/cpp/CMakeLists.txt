@@ -1,24 +1,15 @@
-# For more information about using CMake with Android Studio, read the
-# documentation: https://d.android.com/studio/projects/add-native-code.html.
-# For more examples on how to use CMake, see https://github.com/android/ndk-samples.
-
-# Sets the minimum CMake version required for this project.
 cmake_minimum_required(VERSION 3.22.1)
 
-# Declares the project name. The project name can be accessed via ${ PROJECT_NAME},
-# Since this is the top level CMakeLists.txt, the project name is also accessible
-# with ${CMAKE_PROJECT_NAME} (both CMake variables are in-sync within the top level
-# build script scope).
 project("analytics_core")
 
-# Explicitly tie source files to the current script directory
+# We only compile the persistent memory-mapped engine and its JNI gateway layer
 add_library(
-        spatial_bridge
+        analytics_core
         SHARED
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/model/SpatialRingBuffer.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/model/TrackingEngine.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/SpatialBridgeJNI.cpp"
+        # Assumes these files are sitting right next to this CMakeLists.txt file
+        "${CMAKE_CURRENT_SOURCE_DIR}/core/AnalyticsCore.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/bridge/AnalyticsCoreBridgeJNI.cpp"
 )
 
 find_library(
@@ -27,7 +18,7 @@ find_library(
 )
 
 target_link_libraries(
-        spatial_bridge
+        analytics_core
         android
         ${log-lib}
 )

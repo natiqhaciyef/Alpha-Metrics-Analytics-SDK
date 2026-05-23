@@ -1,0 +1,45 @@
+                ┌──────────────────────────────────────────┐
+                │          AlphaMetricsSDK (Kotlin)        │  ◄── Public API Surface. Stateless pass-through
+                └────────────────────┬─────────────────────┘      that converts parameters to raw array matrices.
+                                     │
+                                     ▼
+                ┌──────────────────────────────────────────┐
+                │        NativeAnalyticsGateway (Kotlin)   │  ◄── Central JNI Bridge Layer. Maps the tracking
+                └────────────────────┬─────────────────────┘      calls down to native compilation blocks.
+                                     │
+┌────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────┐
+│ APPLICATION PROCESS (UI THREAD BOUNDARY)                                                                       │
+│                                    │                                                                           │
+│                                    ▼                                                                           │
+│                  ┌───────────────────────────────────┐                                                         │
+│                  │     NativeAnalyticsGateway (C++)  │  ◄── Unpacks JNI arrays, clamps metadata sizes,         │
+│                  └─────────────────┬─────────────────┘      and translates primitives into fixed binary models.│
+│                                    │                                                                           │
+│                                    ▼                                                                           │
+│                  ┌───────────────────────────────────┐                                                         │
+│                  │      AnalyticsCore Engine (C++)   │  ◄── THE REAL PERSISTENT ENGINE! Safe Lock-Free         │
+│                  └─────────────────┬─────────────────┘      atomic Ring Buffer pushing values to mmap space.   │
+└────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────┘
+                                     │
+                    (Writes directly to Virtual Memory)
+                                     │
+                                     ▼
+                     =================================
+                     │   alpha_metrics_core.bin      │  ◄── KERNEL-MANAGED PERSISTENT STORAGE
+                     │  (Memory-Mapped File via mmap)│      Flushed automatically. Survives all UI crashes.
+                     =================================
+                                     ▲
+                    (Polls cached events via JNI)
+                                     │
+┌────────────────────────────────────┴────────────────────────────────────────────────────────────────────────┐
+│ BACKGROUND SERVICE PROCESS (android:process=":alphametrics_egress_v1")                                      │
+│                                                                                                             │
+│                  ┌───────────────────────────────────┐                                                      │
+│                  │      BackgroundUploadService      │  ◄── Isolated Kotlin background daemon. Unaffected by│
+│                  └─────────────────┬─────────────────┘      main application lifecycle deaths or closures.  │
+│                                    │                                                                        │
+│                                    ▼                                                                        │
+│                  ┌───────────────────────────────────┐                                                      │
+│                  │         Your Analytics Sink       │  ◄── Dispatches clean HTTP network payloads          │
+│                  └───────────────────────────────────┘      safely from a completely isolated process pool. │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
