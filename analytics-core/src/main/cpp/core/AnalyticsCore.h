@@ -34,7 +34,6 @@ public:
     }
 
     bool startEngine(const char* trackingFilePath);
-    bool startEngineWithFd(int sharedFd, int layoutSize);
     void pushEventWithMetadata(const char* screenId, int64_t ts, double x, double y,
                                const char keys[MAX_METADATA_PAIRS][MAX_STR_LEN],
                                const char values[MAX_METADATA_PAIRS][MAX_STR_LEN],

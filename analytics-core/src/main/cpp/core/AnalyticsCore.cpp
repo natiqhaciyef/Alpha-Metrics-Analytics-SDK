@@ -33,25 +33,6 @@ bool AnalyticsCore::startEngine(const char* trackingFilePath) {
     return true;
 }
 
-// Add this brand new function to your AnalyticsCore.cpp file structure blocks:
-bool AnalyticsCore::startEngineWithFd(int sharedFd, int layoutSize) {
-    std::lock_guard<std::mutex> lock(writeLock);
-    if (mappedMemory != nullptr) return true; // Already mapped by this process space window
-
-    allocatedSize = layoutSize;
-    fileDesc = sharedFd; // Use the file descriptor passed across processes by the OS kernel
-
-    // Establish mapping directly using the shared file descriptor address
-    void* mmapRegion = mmap(NULL, allocatedSize, PROT_READ | PROT_WRITE, MAP_SHARED, fileDesc, 0);
-    if (mmapRegion == MAP_FAILED) {
-        fileDesc = -1;
-        return false;
-    }
-
-    mappedMemory = reinterpret_cast<PersistentLayout*>(mmapRegion);
-    return true;
-}
-
 void AnalyticsCore::pushEventWithMetadata(const char* screenId, int64_t ts, double x, double y,
                                           const char keys[MAX_METADATA_PAIRS][MAX_STR_LEN],
                                           const char values[MAX_METADATA_PAIRS][MAX_STR_LEN],
