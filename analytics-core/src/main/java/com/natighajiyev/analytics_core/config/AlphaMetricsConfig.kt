@@ -5,14 +5,16 @@ class AlphaMetricsConfig private constructor(
     val batchConfig: BatchConfig,
     val securityConfig: SecurityConfig,
     val storageConfig: StorageConfig,
-    val isLoggingEnabled: Boolean
+    val trapCrashes: Boolean,
+    val isLoggingEnabled: Boolean,
 ) {
     class Builder {
         private var networkConfig = NetworkConfig.Builder().build()
         private var batchConfig = BatchConfig.Builder().build()
         private var securityConfig = SecurityConfig.Builder().build()
         private var storageConfig = StorageConfig.Builder().build()
-        private var isLoggingEnabled = false
+        private var isLoggingEnabled = true
+        private var trapCrashes: Boolean = true
 
         fun network(block: NetworkConfig.Builder.() -> Unit) = apply {
             networkConfig = NetworkConfig.Builder().apply(block).build()
@@ -30,9 +32,19 @@ class AlphaMetricsConfig private constructor(
             securityConfig = SecurityConfig.Builder().apply(block).build()
         }
 
+        fun setCrashTrappingEnabled(enabled: Boolean) = apply { this.trapCrashes = enabled }
+
         fun setLoggingEnabled(enabled: Boolean) = apply { this.isLoggingEnabled = enabled }
 
-        fun build() = AlphaMetricsConfig(networkConfig, batchConfig, securityConfig, storageConfig, isLoggingEnabled)
+
+        fun build() = AlphaMetricsConfig(
+            networkConfig = networkConfig,
+            batchConfig = batchConfig,
+            securityConfig = securityConfig,
+            storageConfig = storageConfig,
+            trapCrashes = trapCrashes,
+            isLoggingEnabled = isLoggingEnabled,
+        )
     }
 }
 

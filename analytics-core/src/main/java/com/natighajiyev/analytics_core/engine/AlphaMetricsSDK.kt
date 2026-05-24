@@ -7,20 +7,9 @@ import android.os.Bundle
 import android.util.Log
 import com.natighajiyev.analytics_core.bridge.NativeAnalyticsGateway
 import com.natighajiyev.analytics_core.config.AlphaMetricsConfig
-import com.natighajiyev.analytics_core.config.BATCH_BACKOFF
-import com.natighajiyev.analytics_core.config.BATCH_MAX
-import com.natighajiyev.analytics_core.config.BATCH_MIN_TRIGGER
-import com.natighajiyev.analytics_core.config.BATCH_RETRY_LIMIT
-import com.natighajiyev.analytics_core.config.BATCH_SESSION_LIMIT
-import com.natighajiyev.analytics_core.config.NET_BACKUP
-import com.natighajiyev.analytics_core.config.NET_CONN_TIMEOUT
-import com.natighajiyev.analytics_core.config.NET_ENDPOINT
-import com.natighajiyev.analytics_core.config.NET_HEADERS
-import com.natighajiyev.analytics_core.config.NET_READ_TIMEOUT
-import com.natighajiyev.analytics_core.config.SDK_LOGGING
-import com.natighajiyev.analytics_core.config.SEC_CLEAR_TEXT
-import com.natighajiyev.analytics_core.config.SEC_ENCRYPT
 import com.natighajiyev.analytics_core.config.StorageConfig
+import com.natighajiyev.analytics_core.config.exceptionDetector.AlphaAnrWatchdog
+import com.natighajiyev.analytics_core.config.exceptionDetector.AlphaCrashTracer
 import com.natighajiyev.analytics_core.service.BackgroundUploadService
 import java.io.File
 
@@ -31,6 +20,26 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
     internal const val BIN_FILE_NAME = "alpha_metrics_core.bin"
 
     internal var currentConfig: AlphaMetricsConfig? = null
+
+    // Explicit background watchdog reference tracking handle allocation
+    private var anrWatchdog: AlphaAnrWatchdog? = null
+
+    // --- Intent Extra Constants (Maintained for seamless multi-process extractions) ---
+    internal const val NET_ENDPOINT = "NET_ENDPOINT"
+    internal const val NET_BACKUP = "NET_BACKUP"
+    internal const val NET_CONN_TIMEOUT = "NET_CONN_TIMEOUT"
+    internal const val NET_READ_TIMEOUT = "NET_READ_TIMEOUT"
+    internal const val NET_HEADERS = "NET_HEADERS"
+
+    internal const val BATCH_MAX = "BATCH_MAX"
+    internal const val BATCH_MIN_TRIGGER = "BATCH_MIN_TRIGGER"
+    internal const val BATCH_RETRY_LIMIT = "BATCH_RETRY_LIMIT"
+    internal const val BATCH_BACKOFF = "BATCH_BACKOFF"
+    internal const val BATCH_SESSION_LIMIT = "BATCH_SESSION_LIMIT"
+
+    internal const val SEC_ENCRYPT = "SEC_ENCRYPT"
+    internal const val SEC_CLEAR_TEXT = "SEC_CLEAR_TEXT"
+    internal const val SDK_LOGGING = "SDK_LOGGING"
 
     /**
      * Entry point to configure and boot the high-performance tracking pipeline.
@@ -47,8 +56,31 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
             isInitialized = true
             application.registerActivityLifecycleCallbacks(this)
 
+            // We safely check the config object for the trapCrashes rule state
+            if (config?.trapCrashes == true) {
+                val systemDefaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+
+                if (systemDefaultHandler !is AlphaCrashTracer) {
+                    Thread.setDefaultUncaughtExceptionHandler(AlphaCrashTracer(systemDefaultHandler))
+                }
+
+                if (config.isLoggingEnabled) {
+                    Log.d(TAG, "Global Crash Trapping pipeline activated successfully.")
+                }
+
+                // Spawns the concurrent background monitor tracking thread
+                anrWatchdog = AlphaAnrWatchdog(timeoutMs = 5000).apply { start() }
+                if (config.isLoggingEnabled) {
+                    Log.d(TAG, "Concurrently mapped AlphaAnrWatchdog monitor engine thread instance successfully.")
+                }
+            } else {
+                if (config?.isLoggingEnabled == true) {
+                    Log.d(TAG, "Global Crash Trapping skipped per configuration instruction rules.")
+                }
+            }
+
             if (config?.isLoggingEnabled == true) {
-                Log.d(TAG, "Main UI Process memory map engine successfully initialized with custom settings configuration.")
+                Log.d(TAG, "Main UI Process memory map engine successfully initialized.")
             }
         } else {
             Log.e(TAG, "CRITICAL: Native mmap storage initialization failure on file footprint matching sequence.")
@@ -95,6 +127,10 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
      */
     fun tearDown() {
         if (!isInitialized) return
+
+        anrWatchdog?.shutdown()
+        anrWatchdog = null
+
         NativeAnalyticsGateway.nativeStopEngine()
         currentConfig = null
         isInitialized = false

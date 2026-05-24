@@ -40,11 +40,14 @@ object AnalyticsModule {
                 maxQueueCapacity = 500
                 strategyOnBufferFull = StorageConfig.FullStrategy.PURGE_OLDEST
             }
+
             security {
                 useEncryption = false
                 allowCleartextTraffic = true
             }
-            setLoggingEnabled(false)
+
+            setLoggingEnabled(true)
+            setCrashTrappingEnabled(true)
         }.build()
     }
 
