@@ -1,12 +1,9 @@
 package com.natighajiyev.alphametricsanalyticssdk
 
 import android.os.Bundle
-import android.util.Log
 import android.view.MotionEvent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.natighajiyev.analytics_core.engine.AnalyticsEngineController
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -20,9 +17,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-
-        // No manual buffer clearing needed anymore!
-        // The engine clears the queue once the batch-upload is successful.
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -33,7 +27,9 @@ class MainActivity : AppCompatActivity() {
 
             val contextMetadata = hashMapOf(
                 "action" to "screen_down",
-                "pointer_count" to ev.pointerCount.toString()
+                "pointer_count" to ev.pointerCount.toString(),
+                "address of X" to ev.x.toString(),
+                "address of Y" to ev.y.toString()
             )
 
             // Pass this to your injected controller
@@ -41,7 +37,4 @@ class MainActivity : AppCompatActivity() {
         }
         return super.dispatchTouchEvent(ev)
     }
-
-    // You no longer need recordTrackingPoint() or clearTelemetryBuffers() here.
-    // The C++ layer is the "source of truth" now.
 }

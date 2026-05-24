@@ -3,7 +3,6 @@ package com.natighajiyev.analytics_core.bridge
 internal object NativeAnalyticsGateway {
     init { System.loadLibrary("analytics_core") }
 
-    external fun nativeStartEngineWithFd(fd: Int, size: Int): Boolean
     external fun nativeStartEngine(filepath: String): Boolean
     external fun nativeLogEventWithMetadata(
         screenId: String, timestamp: Long, x: Double, y: Double,
