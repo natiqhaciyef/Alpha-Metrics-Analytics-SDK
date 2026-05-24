@@ -18,6 +18,26 @@ internal class HttpAnalyticsDispatcher(
     private val headerMap: Map<String, String> = emptyMap()
 ) : AnalyticsDispatcher {
 
+    companion object {
+        private const val EVENT_NAME = "eventName"
+        private const val SCREEN_TOUCH_EVENT = "screen_touch_event"
+        private const val SCREEN_ID = "screenId"
+        private const val TIMESTAMP = "timestamp"
+        private const val TS = "ts"
+        private const val X = "x"
+        private const val Y = "y"
+        private const val COORDINATE_X = "coordinateX"
+        private const val COORDINATE_Y = "coordinateY"
+        private const val PARAMS = "params"
+        private const val METADATA = "metadata"
+        private const val UTF = "UTF-8"
+        private const val CONTENT_TYPE = "Content-Type"
+        private const val ACCEPT = "Accept"
+        private const val APPLICATION_JSON = "application/json"
+        private const val CHARSET = "charset"
+        private const val POST_METHOD = "POST"
+    }
+
     /**
      * Legacy single-event sender (kept for internal testing compatibility).
      */
@@ -36,33 +56,33 @@ internal class HttpAnalyticsDispatcher(
         return try {
             val url = URL(endpointUrl)
             urlConnection = url.openConnection() as HttpURLConnection
-            urlConnection.requestMethod = "POST"
+            urlConnection.requestMethod = POST_METHOD
             urlConnection.connectTimeout = connectionTimeoutMs
             urlConnection.readTimeout = readTimeoutMs
             urlConnection.doOutput = true
 
-            // 1. Establish basic network request properties
-            urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
-            urlConnection.setRequestProperty("Accept", "application/json")
+            // Establish basic network request properties
+            urlConnection.setRequestProperty(CONTENT_TYPE, "$APPLICATION_JSON; $CHARSET=$UTF")
+            urlConnection.setRequestProperty(ACCEPT, APPLICATION_JSON)
 
-            // 2. Inject consumer custom headers passed across process lines
+            // Inject consumer custom headers passed across process lines
             for ((key, value) in headerMap) {
                 urlConnection.setRequestProperty(key, value)
             }
 
-            // 3. Assemble the top-level batch array payload
+            // Assemble the top-level batch array payload
             val rootJsonArray = JSONArray()
 
             for (eventData in batchList) {
                 val eventObject = JSONObject().apply {
-                    put("eventName", eventData["eventName"]?.toString() ?: "screen_touch_event")
-                    put("screenId", eventData["screenId"]?.toString() ?: "UnknownScreen")
-                    put("timestamp", eventData["ts"] as? Long ?: System.currentTimeMillis())
-                    put("coordinateX", eventData["x"] as? Double ?: 0.0)
-                    put("coordinateY", eventData["y"] as? Double ?: 0.0)
+                    put(EVENT_NAME, eventData[EVENT_NAME]?.toString() ?: SCREEN_TOUCH_EVENT)
+                    put(SCREEN_ID, eventData[SCREEN_ID]?.toString() ?: "UnknownScreen")
+                    put(TIMESTAMP, eventData[TS] as? Long ?: System.currentTimeMillis())
+                    put(COORDINATE_X, eventData[X] as? Double ?: 0.0)
+                    put(COORDINATE_Y, eventData[Y] as? Double ?: 0.0)
 
                     // Safely extract and transform the sub-metadata hashmap blocks
-                    val metadataMap = eventData["params"] as? Map<*, *>
+                    val metadataMap = eventData[PARAMS] as? Map<*, *>
                     val metadataJson = JSONObject()
                     if (!metadataMap.isNullOrEmpty()) {
                         for ((k, v) in metadataMap) {
@@ -71,20 +91,20 @@ internal class HttpAnalyticsDispatcher(
                             }
                         }
                     }
-                    put("metadata", metadataJson)
+                    put(METADATA, metadataJson)
                 }
                 rootJsonArray.put(eventObject)
             }
 
-            // 4. Stream the raw data layout directly over the socket wire
+            // Stream the raw data layout directly over the socket wire
             urlConnection.outputStream.use { os ->
-                OutputStreamWriter(os, "UTF-8").use { writer ->
+                OutputStreamWriter(os, UTF).use { writer ->
                     writer.write(rootJsonArray.toString())
                     writer.flush()
                 }
             }
 
-            // 5. Return success if server acknowledges payload ingestion
+            // Return success if server acknowledges payload ingestion
             urlConnection.responseCode in 200..299
         } catch (e: Exception) {
             false

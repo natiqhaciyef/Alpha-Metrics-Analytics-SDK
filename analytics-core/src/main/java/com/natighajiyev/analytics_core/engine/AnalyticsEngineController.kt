@@ -27,6 +27,7 @@ import javax.inject.Singleton
 
  * */
 
+private const val TAG = "AlphaMetrics_Debug"
 
 @Singleton
 class AnalyticsEngineController @Inject constructor(
@@ -41,7 +42,7 @@ class AnalyticsEngineController @Inject constructor(
         AlphaMetricsSDK.initialize(application, config)
 
         if (config.isLoggingEnabled) {
-            Log.d("AlphaMetrics_Debug", "AnalyticsEngineController linked to native engine lifecycle hooks.")
+            Log.d(TAG, "AnalyticsEngineController linked to native engine lifecycle hooks.")
         }
     }
 
@@ -50,7 +51,7 @@ class AnalyticsEngineController @Inject constructor(
         // Debug check: How many events are currently sitting in the file?
         val count = NativeAnalyticsGateway.nativeGetPendingCount()
         if (config.isLoggingEnabled)
-            Log.d("AlphaMetrics_Debug", "Current events in binary queue - $count: \n{screenId: $screenId, x: $x, y: $y, metadata: $metadata}")
+            Log.d(TAG, "Current events in binary queue - $count: \n{screenId: $screenId, x: $x, y: $y, metadata: $metadata}")
     }
 
     fun shutdown() {
