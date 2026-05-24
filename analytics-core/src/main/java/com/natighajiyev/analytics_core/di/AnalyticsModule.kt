@@ -26,6 +26,7 @@ object AnalyticsModule {
                 connectTimeout = 15
                 readTimeout = 15
                 timeoutUnit = TimeUnit.SECONDS
+                addHeader("Content-Type", "application/json")
             }
             batch {
                 maxBatchSize = 50
@@ -44,6 +45,7 @@ object AnalyticsModule {
             security {
                 useEncryption = false
                 allowCleartextTraffic = true
+                pinPinningHash = "7HIYGoatfrX36Bs05378u37s80QZytEQc7A6YVqiY6w="
             }
 
             setLoggingEnabled(true)
