@@ -5,6 +5,13 @@ import android.os.Looper
 import android.util.Log
 import com.natighajiyev.analytics_core.engine.AlphaMetricsSDK
 
+/**
+ * Independent safety watchdog thread dedicated to detecting Application Not Responding (ANR) hangs.
+ *
+ * It operates by pushing routine tick transaction tokens to the Main UI Thread's MessageQueue.
+ * If the Main Thread fails to clear the token within the designated [timeoutMs] window,
+ * the watchdog intercepts the freeze and writes an ANR footprint event straight to disk.
+ */
 internal class AlphaAnrWatchdog(
     private val timeoutMs: Long = 5000
 ) : Thread(TAG_THREAD) {
@@ -25,6 +32,10 @@ internal class AlphaAnrWatchdog(
     @Volatile
     private var tickCounter = 0
 
+    /**
+     * Continuous background polling loop that monitors main thread responsiveness
+     * across explicit timing check windows.
+     */
     override fun run() {
         if (AlphaMetricsSDK.currentConfig?.isLoggingEnabled == true) {
             Log.d(TAG, "ANR Watchdog thread background monitor loop activated.")
@@ -32,26 +43,29 @@ internal class AlphaAnrWatchdog(
 
         while (isRunning) {
             val executionCheckToken = tickCounter
-            
-            // Post a simple increment transaction task to the Main UI Thread queue
+
+            // Post an execution check token directly to the UI thread
             uiHandler.post {
                 tickCounter++
             }
 
             try {
-                // Sleep for the designated threshold duration limit (e.g., 5 seconds)
                 sleep(timeoutMs)
             } catch (e: InterruptedException) {
                 break
             }
 
-            // If the tickCounter did NOT increase, the Main Thread is frozen and couldn't run our post block!
+            // If the counter hasn't changed, the main thread loop is blocked/frozen
             if (tickCounter == executionCheckToken) {
                 handleAnrDetected()
             }
         }
     }
 
+    /**
+     * Packages system status metadata metrics and flushes an "android_not_respond"
+     * trace down into the C++ mmap allocation region before the application terminates.
+     */
     private fun handleAnrDetected() {
         Log.e(TAG, "CRITICAL: Application Not Responding (ANR) detected! Main thread is frozen.")
 
@@ -61,18 +75,20 @@ internal class AlphaAnrWatchdog(
             FROZEN_STATUS to "true"
         )
 
-        // Force write the ANR data down to your high-performance mmap binary file instantly!
         AlphaMetricsSDK.trackScreenEvent(
             screenId = SCREEN_ID,
-            x = -2.0, // Special coordinate tracking marker indicating an ANR block
+            x = -2.0,
             y = -2.0,
             customParams = anrMetadata
         )
 
-        // Stop our own loop to prevent logging duplicate entries for the same freeze session burst
-        isRunning = false 
+        isRunning = false
     }
 
+    /**
+     * Halts polling executions and safely interrupts the background looping state
+     * to prevent memory leakage during SDK lifecycle teardowns.
+     */
     fun shutdown() {
         isRunning = false
         interrupt()
