@@ -239,9 +239,3 @@ Thread.sleep(6000)
 * **Lifecycle Governance:** Avoid invoking `controller.shutdown()` inside typical UI destruction states. Call it exclusively during hard logout operations or integration test cleanup configurations.
 
 ---
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](https://www.google.com/search?q=LICENSE) file for complete details.
-
----
