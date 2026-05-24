@@ -239,3 +239,10 @@ Thread.sleep(6000)
 * **Lifecycle Governance:** Avoid invoking `controller.shutdown()` inside typical UI destruction states. Call it exclusively during hard logout operations or integration test cleanup configurations.
 
 ---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for complete details.
+
+### What does this mean?
+The MIT License is a short, permissive software license. Basically, you can do whatever you want with this SDK as long as you include the original copyright and license notice in any copy of the project. You can use it in commercial apps, modify it, or distribute it completely free of charge.
