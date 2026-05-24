@@ -15,3 +15,4 @@ internal const val SEC_ENCRYPT = "SEC_ENCRYPT"
 internal const val SEC_CLEAR_TEXT = "SEC_CLEAR_TEXT"
 
 internal const val SDK_LOGGING = "SDK_LOGGING"
+internal const val BATCH_SESSION_LIMIT = "BATCH_SESSION_LIMIT"

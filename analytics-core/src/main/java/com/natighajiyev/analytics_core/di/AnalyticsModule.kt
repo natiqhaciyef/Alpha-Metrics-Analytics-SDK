@@ -2,6 +2,7 @@ package com.natighajiyev.analytics_core.di
 
 import android.content.Context
 import com.natighajiyev.analytics_core.config.AlphaMetricsConfig
+import com.natighajiyev.analytics_core.config.StorageConfig
 import com.natighajiyev.analytics_core.engine.AnalyticsEngineController
 import dagger.Module
 import dagger.Provides
@@ -28,15 +29,22 @@ object AnalyticsModule {
             }
             batch {
                 maxBatchSize = 50
-                minBatchSizeTrigger = 1
+                minBatchSizeTrigger = 10
                 retryAttemptLimit = 3
-                backoffDelay = 2000
+                backoffDelay = 1500
+
+                maxEventsPerBackgroundSession = 40
+            }
+
+            storage {
+                maxQueueCapacity = 500
+                strategyOnBufferFull = StorageConfig.FullStrategy.PURGE_OLDEST
             }
             security {
                 useEncryption = false
                 allowCleartextTraffic = true
             }
-            setLoggingEnabled(true)
+            setLoggingEnabled(false)
         }.build()
     }
 

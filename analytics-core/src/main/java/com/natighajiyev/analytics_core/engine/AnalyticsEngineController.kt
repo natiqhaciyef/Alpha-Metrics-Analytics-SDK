@@ -49,7 +49,8 @@ class AnalyticsEngineController @Inject constructor(
         AlphaMetricsSDK.trackScreenEvent(screenId, x, y, metadata)
         // Debug check: How many events are currently sitting in the file?
         val count = NativeAnalyticsGateway.nativeGetPendingCount()
-        Log.d("AlphaMetrics_Debug", "Current events in binary queue - $count: \n{screenId: $screenId, x: $x, y: $y, metadata: $metadata}")
+        if (config.isLoggingEnabled)
+            Log.d("AlphaMetrics_Debug", "Current events in binary queue - $count: \n{screenId: $screenId, x: $x, y: $y, metadata: $metadata}")
     }
 
     fun shutdown() {

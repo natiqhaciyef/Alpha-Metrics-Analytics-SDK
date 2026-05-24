@@ -11,6 +11,7 @@ import com.natighajiyev.analytics_core.config.BATCH_BACKOFF
 import com.natighajiyev.analytics_core.config.BATCH_MAX
 import com.natighajiyev.analytics_core.config.BATCH_MIN_TRIGGER
 import com.natighajiyev.analytics_core.config.BATCH_RETRY_LIMIT
+import com.natighajiyev.analytics_core.config.BATCH_SESSION_LIMIT
 import com.natighajiyev.analytics_core.config.NET_BACKUP
 import com.natighajiyev.analytics_core.config.NET_CONN_TIMEOUT
 import com.natighajiyev.analytics_core.config.NET_ENDPOINT
@@ -19,6 +20,7 @@ import com.natighajiyev.analytics_core.config.NET_READ_TIMEOUT
 import com.natighajiyev.analytics_core.config.SDK_LOGGING
 import com.natighajiyev.analytics_core.config.SEC_CLEAR_TEXT
 import com.natighajiyev.analytics_core.config.SEC_ENCRYPT
+import com.natighajiyev.analytics_core.config.StorageConfig
 import com.natighajiyev.analytics_core.service.BackgroundUploadService
 import java.io.File
 
@@ -58,6 +60,25 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
      */
     fun trackScreenEvent(screenId: String, x: Double, y: Double, customParams: Map<String, String>) {
         if (!isInitialized) return
+        val config = currentConfig ?: return
+
+        // Fetch current density directly from the C++ layer
+        val pendingCount = NativeAnalyticsGateway.nativeGetPendingCount()
+
+        // Validate if local cache capacity restrictions have been breached
+        if (pendingCount >= config.storageConfig.maxQueueCapacity) {
+            if (config.storageConfig.strategyOnBufferFull == StorageConfig.FullStrategy.DROP_NEWEST) {
+                if (config.isLoggingEnabled) {
+                    Log.w(TAG, "Storage saturated ($pendingCount events). Strategy is DROP_NEWEST. Discarding incoming event.")
+                }
+                return
+            } else {
+                if (config.isLoggingEnabled) {
+                    Log.i(TAG, "Storage saturated ($pendingCount events). Strategy is PURGE_OLDEST. Evicting tail head item.")
+                }
+                NativeAnalyticsGateway.nativePopEvent()
+            }
+        }
 
         // Clamp down parameters count to comply with static binary struct footprint limits
         val boundParams = customParams.entries.take(5)
@@ -115,6 +136,9 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
                 putExtra(BATCH_MIN_TRIGGER, config.batchConfig.minBatchSizeTrigger)
                 putExtra(BATCH_RETRY_LIMIT, config.batchConfig.retryAttemptLimit)
                 putExtra(BATCH_BACKOFF, config.batchConfig.backoffDelayMs)
+
+                // STORAGE & BUDGET SYNC: Forward the background per-session transmission ceiling rule
+                putExtra(BATCH_SESSION_LIMIT, config.batchConfig.maxEventsPerBackgroundSession)
 
                 // Flatten Security Sub-Tree Profiles
                 putExtra(SEC_ENCRYPT, config.securityConfig.useEncryption)
