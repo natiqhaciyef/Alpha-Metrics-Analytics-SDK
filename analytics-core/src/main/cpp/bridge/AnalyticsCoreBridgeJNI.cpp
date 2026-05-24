@@ -5,24 +5,16 @@
 #include <jni.h>
 #include "../core/AnalyticsEvent.h"
 #include "../core/AnalyticsCore.h"
+#include <cstring>
 
 extern "C" {
 
 JNIEXPORT jboolean JNICALL
 Java_com_natighajiyev_analytics_1core_bridge_NativeAnalyticsGateway_nativeStartEngine(JNIEnv *env, jobject thiz, jstring filepath) {
+    if (!filepath) return JNI_FALSE;
     const char* nativePath = env->GetStringUTFChars(filepath, nullptr);
     bool result = AnalyticsCore::getInstance().startEngine(nativePath);
     env->ReleaseStringUTFChars(filepath, nativePath);
-    return result ? JNI_TRUE : JNI_FALSE;
-}
-
-JNIEXPORT jboolean JNICALL
-Java_com_natighajiyev_analytics_1core_bridge_NativeAnalyticsGateway_nativeStartEngineWithFd(
-        JNIEnv *env, jobject thiz, jint fd, jint layout_size) {
-
-    // Route the file descriptor parameter straight down to your Core initialization sequence
-    bool result = AnalyticsCore::getInstance().startEngineWithFd(static_cast<int>(fd), static_cast<int>(layout_size));
-
     return result ? JNI_TRUE : JNI_FALSE;
 }
 
@@ -31,16 +23,16 @@ Java_com_natighajiyev_analytics_1core_bridge_NativeAnalyticsGateway_nativeLogEve
         JNIEnv *env, jobject thiz, jstring screen_id, jlong timestamp, jdouble x, jdouble y,
         jobjectArray keys_array, jobjectArray values_array, jint pair_count) {
 
+    if (!screen_id || !keys_array || !values_array) return;
     const char* nativeScreenId = env->GetStringUTFChars(screen_id, nullptr);
 
     char c_keys[MAX_METADATA_PAIRS][MAX_STR_LEN] = {0};
     char c_values[MAX_METADATA_PAIRS][MAX_STR_LEN] = {0};
-
     size_t clampCount = (pair_count > MAX_METADATA_PAIRS) ? MAX_METADATA_PAIRS : pair_count;
 
     for (size_t i = 0; i < clampCount; ++i) {
-        jstring js_key = (jstring)env->GetObjectArrayElement(keys_array, i);
-        jstring js_val = (jstring)env->GetObjectArrayElement(values_array, i);
+        jstring js_key = static_cast<jstring>(env->GetObjectArrayElement(keys_array, i));
+        jstring js_val = static_cast<jstring>(env->GetObjectArrayElement(values_array, i));
 
         if (js_key) {
             const char* k_chars = env->GetStringUTFChars(js_key, nullptr);
@@ -70,20 +62,60 @@ Java_com_natighajiyev_analytics_1core_bridge_NativeAnalyticsGateway_nativePollEv
     jobject masterMap = env->NewObject(mapClass, mapInit);
     jmethodID mapPut = env->GetMethodID(mapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
-    // Root parameters
-    env->CallObjectMethod(masterMap, mapPut, env->NewStringUTF("screenId"), env->NewStringUTF(ev.screenId));
+    // 1. Map eventName
+    jstring jEventNameKey = env->NewStringUTF("eventName");
+    jstring jEventNameVal = env->NewStringUTF(ev.eventName[0] != '\0' ? ev.eventName : "screen_touch_event");
+    env->CallObjectMethod(masterMap, mapPut, jEventNameKey, jEventNameVal);
+    env->DeleteLocalRef(jEventNameKey);
+    env->DeleteLocalRef(jEventNameVal);
 
+    // 2. Map screenId
+    jstring jScreenKey = env->NewStringUTF("screenId");
+    jstring jScreenVal = env->NewStringUTF(ev.screenId);
+    env->CallObjectMethod(masterMap, mapPut, jScreenKey, jScreenVal);
+    env->DeleteLocalRef(jScreenKey);
+    env->DeleteLocalRef(jScreenVal);
+
+    // 3. Map long timestamp
     jclass longClass = env->FindClass("java/lang/Long");
     jmethodID longInit = env->GetMethodID(longClass, "<init>", "(J)V");
-    env->CallObjectMethod(masterMap, mapPut, env->NewStringUTF("ts"), env->NewObject(longClass, longInit, ev.timestamp));
+    jstring jTsKey = env->NewStringUTF("ts");
+    jobject jTsVal = env->NewObject(longClass, longInit, ev.timestamp);
+    env->CallObjectMethod(masterMap, mapPut, jTsKey, jTsVal);
+    env->DeleteLocalRef(jTsKey);
+    env->DeleteLocalRef(jTsVal);
 
-    // Dynamic screen-specific parameters object metadata mapping
-    jobject metaPayloadMap = env->NewObject(mapClass, mapInit);
+    // 4. Map coordinates metrics
+    jclass doubleClass = env->FindClass("java/lang/Double");
+    jmethodID doubleInit = env->GetMethodID(doubleClass, "<init>", "(D)V");
+
+    jstring jXKey = env->NewStringUTF("x");
+    jobject jXVal = env->NewObject(doubleClass, doubleInit, ev.coordinateX);
+    env->CallObjectMethod(masterMap, mapPut, jXKey, jXVal);
+    env->DeleteLocalRef(jXKey);
+    env->DeleteLocalRef(jXVal);
+
+    jstring jYKey = env->NewStringUTF("y");
+    jobject jYVal = env->NewObject(doubleClass, doubleInit, ev.coordinateY);
+    env->CallObjectMethod(masterMap, mapPut, jYKey, jYVal);
+    env->DeleteLocalRef(jYKey); // FIX: Successfully updated to clear jYKey cleanly instead of jXKey duplicate!
+    env->DeleteLocalRef(jYVal);
+
+    // 5. Map custom metadata params sub-object map
+    jobject metaMap = env->NewObject(mapClass, mapInit);
     for (size_t i = 0; i < ev.metadataSize; ++i) {
-        env->CallObjectMethod(metaPayloadMap, mapPut, env->NewStringUTF(ev.metadata[i].key), env->NewStringUTF(ev.metadata[i].value));
+        jstring jK = env->NewStringUTF(ev.metadata[i].key);
+        jstring jV = env->NewStringUTF(ev.metadata[i].value);
+        env->CallObjectMethod(metaMap, mapPut, jK, jV);
+        env->DeleteLocalRef(jK);
+        env->DeleteLocalRef(jV);
     }
 
-    env->CallObjectMethod(masterMap, mapPut, env->NewStringUTF("params"), metaPayloadMap);
+    jstring jParamsKey = env->NewStringUTF("params");
+    env->CallObjectMethod(masterMap, mapPut, jParamsKey, metaMap);
+    env->DeleteLocalRef(jParamsKey);
+    env->DeleteLocalRef(metaMap);
+
     return masterMap;
 }
 

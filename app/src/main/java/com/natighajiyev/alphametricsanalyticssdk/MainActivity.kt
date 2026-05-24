@@ -5,8 +5,7 @@ import android.util.Log
 import android.view.MotionEvent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import com.natighajiyev.alphametricsanalyticssdk.databinding.ActivityMainBinding
 import com.natighajiyev.analytics_core.engine.AnalyticsEngineController
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -16,13 +15,36 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var analyticsEngineController: AnalyticsEngineController
 
+    private lateinit var binding: ActivityMainBinding
+    private var isTestFreezeActive = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // No manual buffer clearing needed anymore!
-        // The engine clears the queue once the batch-upload is successful.
+       binding.anrButton.setOnClickListener {
+           if (isTestFreezeActive) {
+               Log.d("AlphaMetrics_Test", "Ignored backlogged touch queue event entry.")
+               return@setOnClickListener
+           }
+
+           isTestFreezeActive = true
+           Log.d("AlphaMetrics_Test", "Deliberately freezing Main UI Thread for ANR verification...")
+
+           try {
+               Thread.sleep(6000)
+           } finally {
+               Log.d("AlphaMetrics_Test", "Thread released.")
+               isTestFreezeActive = false
+           }
+       }
+
+        binding.crashButton.setOnClickListener {
+            Log.d("AlphaMetrics_Test", "Deliberately forcing a fatal application crash...")
+            throw RuntimeException("AlphaMetrics Manual Crash Verification Exception")
+        }
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -33,7 +55,9 @@ class MainActivity : AppCompatActivity() {
 
             val contextMetadata = hashMapOf(
                 "action" to "screen_down",
-                "pointer_count" to ev.pointerCount.toString()
+                "pointer_count" to ev.pointerCount.toString(),
+                "address of X" to ev.x.toString(),
+                "address of Y" to ev.y.toString()
             )
 
             // Pass this to your injected controller
@@ -41,7 +65,4 @@ class MainActivity : AppCompatActivity() {
         }
         return super.dispatchTouchEvent(ev)
     }
-
-    // You no longer need recordTrackingPoint() or clearTelemetryBuffers() here.
-    // The C++ layer is the "source of truth" now.
 }
