@@ -1,5 +1,7 @@
 package com.natighajiyev.analytics_core.config
 
+import com.natighajiyev.analytics_core.config.AlphaEgressWorker
+
 /**
  * Immutable configuration profile containing the structural behavior parameters for the SDK.
  * * This class serves as the central data blueprint directing network dispatching, memory thresholds,
@@ -19,6 +21,8 @@ class AlphaMetricsConfig private constructor(
     val storageConfig: StorageConfig,
     val trapCrashes: Boolean,
     val isLoggingEnabled: Boolean,
+    val automaticEgressEnabled: Boolean,
+    val customEgressWorker: AlphaEgressWorker?
 ) {
     /**
      * Fluent API construction utility implementing the Builder Pattern to assemble [AlphaMetricsConfig] properties.
@@ -30,6 +34,8 @@ class AlphaMetricsConfig private constructor(
         private var storageConfig = StorageConfig.Builder().build()
         private var isLoggingEnabled = true
         private var trapCrashes: Boolean = true
+        private var automaticEgressEnabled: Boolean = true
+        private var customEgressWorker: AlphaEgressWorker? = null
 
         /**
          * Customizes network subsystem parameters using a functional configuration literal block.
@@ -71,6 +77,18 @@ class AlphaMetricsConfig private constructor(
         fun setLoggingEnabled(enabled: Boolean) = apply { this.isLoggingEnabled = enabled }
 
         /**
+         * Toggles the automatic background dispatch loop triggered on app close.
+         * If set to false, the SDK will never attempt to spawn standard background services.
+         */
+        fun setAutomaticEgressEnabled(enabled: Boolean) = apply { this.automaticEgressEnabled = enabled }
+
+        /**
+         * Registers an explicit developer-supplied [AlphaEgressWorker] implementation block.
+         * Overrides the default platform BackgroundUploadService loop completely.
+         */
+        fun setCustomEgressWorker(worker: AlphaEgressWorker) = apply { this.customEgressWorker = worker }
+
+        /**
          * Compiles the mutable options states into a thread-safe, immutable [AlphaMetricsConfig] instance.
          */
         fun build() = AlphaMetricsConfig(
@@ -80,6 +98,8 @@ class AlphaMetricsConfig private constructor(
             storageConfig = storageConfig,
             trapCrashes = trapCrashes,
             isLoggingEnabled = isLoggingEnabled,
+            automaticEgressEnabled = automaticEgressEnabled,
+            customEgressWorker = customEgressWorker
         )
     }
 }

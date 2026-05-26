@@ -43,6 +43,7 @@ android {
 
 dependencies {
     implementation(project(":analytics-core"))
+    implementation(project(":analytics-di-hilt"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -61,10 +62,8 @@ dependencies {
     // Process Hilt code generation using KSP instead of Kapt
     ksp(libs.dagger.hilt.compiler)
 
-    val roomVersion = "2.6.1"
-
     // Core Room Runtime dependencies
-    implementation("androidx.room:room-runtime:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion")
-    ksp("androidx.room:room-compiler:$roomVersion")
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 }

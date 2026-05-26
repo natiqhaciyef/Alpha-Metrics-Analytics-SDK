@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "Alpha Metrics Analytics SDK"
 include(":app")
 include(":analytics-core")
+include(":analytics-di-hilt")
