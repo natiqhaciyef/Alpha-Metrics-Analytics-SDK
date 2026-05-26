@@ -1,14 +1,11 @@
 package com.natighajiyev.alphametricsanalyticssdk
 
-import android.app.Activity
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.WindowCallbackWrapper
 import com.natighajiyev.alphametricsanalyticssdk.databinding.ActivityMainBinding
-import com.natighajiyev.analytics_core.engine.AlphaMetricsSDK
 import com.natighajiyev.analytics_core.engine.AnalyticsEngineController
 import com.natighajiyev.analytics_core.util.WindowMetricsHelper
 import dagger.hilt.android.AndroidEntryPoint

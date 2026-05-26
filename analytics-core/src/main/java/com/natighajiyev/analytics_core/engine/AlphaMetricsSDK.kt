@@ -3,30 +3,14 @@ package com.natighajiyev.analytics_core.engine
 import android.app.Activity
 import android.app.Application
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import com.natighajiyev.analytics_core.bridge.NativeAnalyticsGateway
 import com.natighajiyev.analytics_core.config.AlphaMetricsConfig
-import com.natighajiyev.analytics_core.config.BATCH_BACKOFF
-import com.natighajiyev.analytics_core.config.BATCH_MAX
-import com.natighajiyev.analytics_core.config.BATCH_MIN_TRIGGER
-import com.natighajiyev.analytics_core.config.BATCH_RETRY_LIMIT
-import com.natighajiyev.analytics_core.config.BATCH_SESSION_LIMIT
-import com.natighajiyev.analytics_core.config.NET_BACKUP
-import com.natighajiyev.analytics_core.config.NET_CONN_TIMEOUT
-import com.natighajiyev.analytics_core.config.NET_ENDPOINT
-import com.natighajiyev.analytics_core.config.NET_HEADERS
-import com.natighajiyev.analytics_core.config.NET_PINNING_HASH
-import com.natighajiyev.analytics_core.config.NET_READ_TIMEOUT
-import com.natighajiyev.analytics_core.config.SDK_LOGGING
-import com.natighajiyev.analytics_core.config.SEC_CLEAR_TEXT
-import com.natighajiyev.analytics_core.config.SEC_ENCRYPT
 import com.natighajiyev.analytics_core.config.StorageConfig
 import com.natighajiyev.analytics_core.config.exceptionDetector.AlphaAnrWatchdog
 import com.natighajiyev.analytics_core.config.exceptionDetector.AlphaCrashTracer
 import com.natighajiyev.analytics_core.network.worker.DefaultServiceEgressWorker
-import com.natighajiyev.analytics_core.service.BackgroundUploadService
 import java.io.File
 
 /**
@@ -308,7 +292,7 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
     }
 
     override fun onActivityStarted(activity: Activity) {
-        runningActivitiesCount++
+        runningActivitiesCount += 1
     }
 
     /**
@@ -318,7 +302,7 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
      */
     override fun onActivityStopped(activity: Activity) {
         if (runningActivitiesCount > 0) {
-            runningActivitiesCount--
+            runningActivitiesCount -= 1
         }
 
         if (runningActivitiesCount == 0) {
@@ -341,8 +325,11 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
                 )
             }
 
-            val worker = config.customEgressWorker ?: defaultServiceWorker
-            worker.onEgressTriggered(activity.applicationContext, config)
+            if (!activity.isChangingConfigurations) {
+                val worker = config.customEgressWorker ?: defaultServiceWorker
+                worker.onEgressTriggered(activity.applicationContext, config)
+                runningActivitiesCount += 1
+            }
         }
     }
 
