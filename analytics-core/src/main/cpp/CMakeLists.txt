@@ -8,7 +8,7 @@ add_library(
         SHARED
 
         # Assumes these files are sitting right next to this CMakeLists.txt file
-        "${CMAKE_CURRENT_SOURCE_DIR}/core/AnalyticsCore.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/core/AnalyticsCoreEngine.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/bridge/AnalyticsCoreBridgeJNI.cpp"
 )
 

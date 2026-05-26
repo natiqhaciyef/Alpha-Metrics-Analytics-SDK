@@ -61,13 +61,49 @@ class AnalyticsEngineController(
      * @param y The exact vertical relative pixel density value mapped during the tap event window.
      * @param metadata A map of dynamic context descriptors (e.g., component names or workflow identifiers).
      */
-    fun logTouchStream(screenId: String, x: Double, y: Double, metadata: Map<String, String>) {
+    fun logTouchStream(
+        screenId: String,
+        x: Double,
+        y: Double,
+        metadata: Map<String, String> = mapOf()
+    ) {
         AlphaMetricsSDK.trackScreenEvent(screenId, x, y, metadata)
 
-        // Debug check: Evaluate current queue accumulation metrics sitting inside the binary file structure
         val count = NativeAnalyticsGateway.nativeGetPendingCount()
         if (config.isLoggingEnabled) {
-            Log.d(TAG, "Current events in binary queue - $count: \n{screenId: $screenId, x: $x, y: $y, metadata: $metadata}")
+            Log.d(
+                TAG,
+                "Current events in binary queue - $count: \n{screenId: $screenId, x: $x, y: $y, metadata: $metadata}"
+            )
+        }
+    }
+
+    /**
+     * Intercepts and dispatches raw interaction touch vectors down into the high-speed native memory map pipeline.
+     *
+     * @param screenId The human-readable identifier of the originating view container or activity node.
+     * @param x The exact horizontal relative pixel density value mapped during the tap event window.
+     * @param y The exact vertical relative pixel density value mapped during the tap event window.
+     * @param metadata A map of dynamic context descriptors (e.g., component names or workflow identifiers).
+     */
+    fun logTouchStream(
+        screenId: String,
+        x: Double,
+        y: Double,
+        screenWidth: Int,
+        screenHeight: Int,
+        orientation: String,
+        metadata: Map<String, String> = mapOf()
+    ) {
+        AlphaMetricsSDK
+            .trackScreenEvent(screenId, x, y, screenWidth, screenHeight, orientation, metadata)
+
+        val count = NativeAnalyticsGateway.nativeGetPendingCount()
+        if (config.isLoggingEnabled) {
+            Log.d(
+                TAG,
+                "Current events in binary queue - $count: \n{screenId: $screenId, x: $x, y: $y, width: $screenWidth, heigh: $screenHeight, orientation: $orientation, metadata: $metadata}"
+            )
         }
     }
 
