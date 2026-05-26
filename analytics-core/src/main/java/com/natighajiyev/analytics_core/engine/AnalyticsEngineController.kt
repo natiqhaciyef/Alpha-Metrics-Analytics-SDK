@@ -5,9 +5,6 @@ import android.content.Context
 import android.util.Log
 import com.natighajiyev.analytics_core.bridge.NativeAnalyticsGateway
 import com.natighajiyev.analytics_core.config.AlphaMetricsConfig
-import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
 
@@ -40,9 +37,8 @@ import javax.inject.Singleton
 
 private const val TAG = "AlphaMetrics_Debug"
 
-@Singleton
-class AnalyticsEngineController @Inject constructor(
-    @ApplicationContext private val context: Context,
+class AnalyticsEngineController(
+    private val context: Context,
     private val config: AlphaMetricsConfig
 ) {
     init {

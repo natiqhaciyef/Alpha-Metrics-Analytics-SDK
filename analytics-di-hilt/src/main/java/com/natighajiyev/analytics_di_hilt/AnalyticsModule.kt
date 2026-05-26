@@ -1,4 +1,4 @@
-package com.natighajiyev.analytics_core.di
+package com.natighajiyev.analytics_di_hilt
 
 import android.content.Context
 import com.natighajiyev.analytics_core.config.AlphaMetricsConfig
@@ -9,9 +9,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
-
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -25,7 +23,7 @@ object AnalyticsModule {
                 serverEndpoint = "https://analytics.backend.com/api/v2/metrics"
                 connectTimeout = 15
                 readTimeout = 15
-                timeoutUnit = TimeUnit.SECONDS
+                timeoutUnit = java.util.concurrent.TimeUnit.SECONDS
                 addHeader("Content-Type", "application/json")
             }
             batch {
@@ -50,6 +48,7 @@ object AnalyticsModule {
 
             setLoggingEnabled(true)
             setCrashTrappingEnabled(true)
+            setAutomaticEgressEnabled(true)
         }.build()
     }
 

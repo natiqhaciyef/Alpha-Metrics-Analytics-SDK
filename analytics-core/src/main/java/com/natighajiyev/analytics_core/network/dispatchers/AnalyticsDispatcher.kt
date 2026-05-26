@@ -1,4 +1,4 @@
-package com.natighajiyev.analytics_core.service.network
+package com.natighajiyev.analytics_core.network.dispatchers
 
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
