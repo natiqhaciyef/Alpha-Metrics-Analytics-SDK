@@ -6,17 +6,30 @@
 #define ALPHA_METRICS_ANALYTICS_SDK_ANALYTICSEVENT_H
 
 #include <cstdint>
-#include "MetadataPair.h"
+#include "events/MetadataPayload.h"
+#include "events/LayoutPayload.h"
 
-struct AnalyticsEvent {
-    int64_t timestamp;
-    char eventName[64];
-    double coordinateX;
-    double coordinateY;
-    char screenId[64];
+#pragma once
 
-    size_t metadataSize;
-    MetadataPair metadata[MAX_METADATA_PAIRS];
+enum class EventType : uint8_t {
+    STANDARD = 0,
+    LAYOUT = 1
 };
 
+
+#pragma pack(push, 1)
+struct AnalyticsEvent {
+    EventType type;
+    char screenId[64];
+    int64_t timestamp;
+    double x;
+    double y;
+
+    MetadataPayload metadata;
+
+    union {
+        LayoutPayload layout;
+    } payload;
+};
+#pragma pack(pop)
 #endif //ALPHA_METRICS_ANALYTICS_SDK_ANALYTICSEVENT_H

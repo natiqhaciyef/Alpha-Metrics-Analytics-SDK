@@ -138,7 +138,10 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
 
                 anrWatchdog = AlphaAnrWatchdog(timeoutMs = 5000).apply { start() }
                 if (config.isLoggingEnabled) {
-                    Log.d(TAG, "Concurrently mapped AlphaAnrWatchdog monitor engine thread instance successfully.")
+                    Log.d(
+                        TAG,
+                        "Concurrently mapped AlphaAnrWatchdog monitor engine thread instance successfully."
+                    )
                 }
             } else {
                 if (config?.isLoggingEnabled == true) {
@@ -150,7 +153,10 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
                 Log.d(TAG, "Main UI Process memory map engine successfully initialized.")
             }
         } else {
-            Log.e(TAG, "CRITICAL: Native mmap storage initialization failure on file footprint matching sequence.")
+            Log.e(
+                TAG,
+                "CRITICAL: Native mmap storage initialization failure on file footprint matching sequence."
+            )
         }
     }
 
@@ -166,7 +172,12 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
      * @param y Normalized relative vertical component representing viewport tap density.
      * @param customParams Contextual key-value descriptors attached to the targeted action workflow.
      */
-    fun trackScreenEvent(screenId: String, x: Double, y: Double, customParams: Map<String, String>) {
+    fun trackScreenEvent(
+        screenId: String,
+        x: Double,
+        y: Double,
+        customParams: Map<String, String> = mutableMapOf()
+    ) {
         if (!isInitialized) return
         val config = currentConfig ?: return
 
@@ -174,12 +185,18 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
         if (pendingCount >= config.storageConfig.maxQueueCapacity) {
             if (config.storageConfig.strategyOnBufferFull == StorageConfig.FullStrategy.DROP_NEWEST) {
                 if (config.isLoggingEnabled) {
-                    Log.w(TAG, "Storage saturated ($pendingCount events). Strategy is DROP_NEWEST. Discarding incoming event.")
+                    Log.w(
+                        TAG,
+                        "Storage saturated ($pendingCount events). Strategy is DROP_NEWEST. Discarding incoming event."
+                    )
                 }
                 return
             } else {
                 if (config.isLoggingEnabled) {
-                    Log.i(TAG, "Storage saturated ($pendingCount events). Strategy is PURGE_OLDEST. Evicting tail head item.")
+                    Log.i(
+                        TAG,
+                        "Storage saturated ($pendingCount events). Strategy is PURGE_OLDEST. Evicting tail head item."
+                    )
                 }
                 NativeAnalyticsGateway.nativePopEvent()
             }
@@ -191,6 +208,71 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
 
         NativeAnalyticsGateway.nativeLogEventWithMetadata(
             screenId, System.currentTimeMillis(), x, y, keys, values, boundParams.size
+        )
+    }
+
+    /**
+     * Logs a screen touch event along with absolute tap coordinates and current viewport metrics.
+     *
+     * This function hands over the raw tap points and screen dimensions directly to the native
+     * C++ storage engine via JNI. It checks queue limits beforehand to prevent buffer overflows.
+     * Providing screen sizes directly enables backend layout normalization for visual touch heatmaps.
+     *
+     * @param screenId The name or identifier of the visible screen layer.
+     * @param x The raw horizontal pixel coordinate of the touch input.
+     * @param y The raw vertical pixel coordinate of the touch input.
+     * @param screenWidth The current width of the application window in pixels.
+     * @param screenHeight The current height of the application window in pixels.
+     * @param orientation The structural rotation state of the viewport (`"portrait"` or `"landscape"`).
+     */
+    fun trackScreenEvent(
+        screenId: String,
+        x: Double,
+        y: Double,
+        screenWidth: Int,
+        screenHeight: Int,
+        orientation: String,
+        customParams: Map<String, String> = mutableMapOf()
+    ) {
+        if (!isInitialized) return
+        val config = currentConfig ?: return
+
+        val pendingCount = NativeAnalyticsGateway.nativeGetPendingCount()
+        if (pendingCount >= config.storageConfig.maxQueueCapacity) {
+            if (config.storageConfig.strategyOnBufferFull == StorageConfig.FullStrategy.DROP_NEWEST) {
+                if (config.isLoggingEnabled) {
+                    Log.w(
+                        TAG,
+                        "Storage saturated ($pendingCount events). Strategy is DROP_NEWEST. Discarding incoming event."
+                    )
+                }
+                return
+            } else {
+                if (config.isLoggingEnabled) {
+                    Log.i(
+                        TAG,
+                        "Storage saturated ($pendingCount events). Strategy is PURGE_OLDEST. Evicting tail head item."
+                    )
+                }
+                NativeAnalyticsGateway.nativePopEvent()
+            }
+        }
+
+        val boundParams = customParams.entries.take(5)
+        val keys = boundParams.map { it.key }.toTypedArray()
+        val values = boundParams.map { it.value }.toTypedArray()
+
+        NativeAnalyticsGateway.nativeLogEventWithLayout(
+            screenId = screenId,
+            timestamp = System.currentTimeMillis(),
+            x = x,
+            y = y,
+            screenWidth = screenWidth,
+            screenHeight = screenHeight,
+            orientation = orientation,
+            keyArray = keys,
+            valuesArray = values,
+            pairCount = boundParams.size
         )
     }
 
@@ -242,19 +324,23 @@ object AlphaMetricsSDK : Application.ActivityLifecycleCallbacks {
         if (runningActivitiesCount == 0) {
             val config = currentConfig ?: return
 
-            // Early exit if the consumer chose to completely manage egress loops manually
             if (!config.automaticEgressEnabled) {
                 if (config.isLoggingEnabled) {
-                    Log.w(TAG, "UI halted. Automated egress disabled. Relying entirely on custom flushing routines.")
+                    Log.w(
+                        TAG,
+                        "UI halted. Automated egress disabled. Relying entirely on custom flushing routines."
+                    )
                 }
                 return
             }
 
             if (config.isLoggingEnabled) {
-                Log.d(TAG, "UI interaction stopped entirely. Routing to active egress pipeline workers...")
+                Log.d(
+                    TAG,
+                    "UI interaction stopped entirely. Routing to active egress pipeline workers..."
+                )
             }
 
-            // Delegate execution to the designated abstraction worker strategy
             val worker = config.customEgressWorker ?: defaultServiceWorker
             worker.onEgressTriggered(activity.applicationContext, config)
         }
