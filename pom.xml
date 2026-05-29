@@ -6,7 +6,7 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>io.github.natiqhaciyef:alpha-metrics-analytics</name>
+    <name>${project.groupId}:${project.artifactId}</name>
     <description>A high-performance, native-backed analytics tracking engine for Android applications. AlphaMetrics leverages a C++ core via JNI and a spatial ring buffer implementation to deliver low-latency, thread-safe event logging with minimal CPU and memory overhead.</description>
     <url>https://github.com/natiqhaciyef/Alpha-Metrics-Analytics-SDK</url>
 
@@ -19,9 +19,10 @@
 
     <developers>
         <developer>
+            <id>natiqhaciyef</id>
             <name>Natig Hajiyev</name>
             <email>natiq00h2272@gmail.com</email>
-            <organization>natiqhaciyef</organization>
+            <organization>AlphaMetrics</organization>
             <organizationUrl>https://github.com/natiqhaciyef</organizationUrl>
         </developer>
     </developers>
@@ -34,6 +35,17 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.7.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -57,6 +69,21 @@
                         <id>attach-javadocs</id>
                         <goals>
                             <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.2.7</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
                         </goals>
                     </execution>
                 </executions>
