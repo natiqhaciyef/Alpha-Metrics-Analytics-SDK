@@ -1,0 +1,37 @@
+name: Publish to Maven Central
+
+on:
+  release:
+    types: [published] # Triggers when you draft and publish a formal GitHub Release
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17' # Choose your target Java version
+          distribution: 'temurin'
+          server-id: central # Maps to the <server> ID used by the deployment plugin
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_TOKEN
+
+      - name: Install GPG Key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+
+      - name: Publish Artifacts
+        run: |
+          mvn clean deploy -B \
+            -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}"
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
