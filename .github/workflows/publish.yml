@@ -2,7 +2,7 @@ name: Publish to Maven Central
 
 on:
   release:
-    types: [published] # Triggers when you draft and publish a formal GitHub Release
+    types: [published]
 
 jobs:
   publish:
@@ -14,9 +14,9 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '17' # Choose your target Java version
+          java-version: '17'
           distribution: 'temurin'
-          server-id: central # Maps to the <server> ID used by the deployment plugin
+          server-id: central
           server-username: MAVEN_CENTRAL_USERNAME
           server-password: MAVEN_CENTRAL_TOKEN
 
