@@ -16,6 +16,10 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          # Restores the exact server entity mapping expected by the plugin code
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_TOKEN
 
       - name: Install GPG Key
         uses: crazy-max/ghaction-import-gpg@v6
@@ -25,11 +29,12 @@ jobs:
           git_user_signingkey: true
           git_commit_gpgsign: true
 
-      - name: Publish Artifacts with Force Credentials
-        # We explicitly inject the username and password directly into the central plugin properties via -D flags
+      - name: Publish Artifacts with Aligned Handshaking
         run: |
           mvn clean deploy -B -e -X \
             -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" \
-            -DpublishingServerId=central \
-            -Dcentral.username="${{ secrets.MAVEN_CENTRAL_USERNAME }}" \
-            -Dcentral.password="${{ secrets.MAVEN_CENTRAL_TOKEN }}"
+            -DpublishingServerId=central
+        env:
+          # Injects the explicit strings into the environment variables matching the configuration keys above
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
