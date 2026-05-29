@@ -30,7 +30,7 @@ jobs:
 
       - name: Publish Artifacts
         run: |
-          mvn clean deploy -B \
+          mvn clean deploy -B -e -X \
             -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}"
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
