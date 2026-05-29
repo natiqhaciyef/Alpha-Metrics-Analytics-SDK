@@ -41,7 +41,7 @@
                 <version>0.7.0</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <publishingServerId>${server}</publishingServerId>
+                    <publishingServerId>central</publishingServerId>
                     <autoPublish>true</autoPublish>
                 </configuration>
             </plugin>
