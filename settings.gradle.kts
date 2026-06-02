@@ -19,7 +19,8 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Alpha Metrics Analytics SDK"
+rootProject.name = "AlphaMetricsAnalyticsSDK"
+includeBuild("build-logic")
 include(":app")
 include(":analytics-core")
 include(":analytics-di-hilt")
